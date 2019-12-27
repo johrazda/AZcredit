@@ -352,6 +352,11 @@ button:hover {
   width: 75px;
 }
 
+section {
+  -webkit-column-break-after: page;
+          break-after: page;
+}
+
 @media print {
   .no-print {
     visibility: hidden !important;
