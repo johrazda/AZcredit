@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="css/main.css" />
+    <title>AZ Carryover</title>
+  </head>
+  <!-- -------------------------------------------------------------------------------------
+    Version: 1.2.0
+    1) Added Version and release date. This is added to the Help text.
+    2) Added client's name field.
+    3) Added checks to entries made --
+       a) Max value allowed (assume married filing joint) per form.
+       b) Amount used cannot exceed amount available for previous years.
+    4) Added entries for forms
+       a) 309 - Tax to other states (No carryover).
+       b) 310 - Solar energy.
+       c) 340 - Military Family Refief Fund (No carryover).
+    Version 1.2.1  
+    1) Updated carryover limits table
+    2) Minor updates to Help text.
+    3) Fixed minor problem with the "Help" display.
+    Version 1.2.2
+    1) Correct description and "Help" text.
+    2) Minor formatting to make more screen available.
+    Version 1.2.3
+    1) Added print button and disabled buttons from being printed.
+    2) Added "@media print" in SCSS to control printing 
+    Version 1.2.4
+    1) If credit is availabe then diplay current year form even if
+       all of the credit is used.
+    Version 1.2.5
+    1) Added my name & email to allow users to report suggestions or problems to me.
+    Version 1.2.6
+    1) Added code to define the order in which forms are processed. This was required
+       because Military Credit is taken first.
+    2) In the Training Aides tables, the Forms are presented in the order they are processed.
+    3) Fixed bug with displaying tables for Previous and Current Years.
+    Version 1.2.7
+    1) Added code to automatically update current date.
+    2) Corrected minor errors with line number references.
+    3) Changed name of HTML file to AZcredit.
+    4) Fix problem with not printing client name.
+    Version 1.3.0
+    1) Change the algorythm for recapturing credits
+       a) Recapture Form 340 credits first
+       b) Recapture oldest to newest credit for Forms 310, 321, 322, 323, 348, and 352.
+       c) Recapture Form 309 credits last
+    Version 1.4.0
+    1) Correct line number references when the current year changes.
+    2) Fix initialization of Current Year.
+    3) Disable validatedata function. The intent of the function was to assure when entering
+      credit, they didn't exceed the maximum. The problem is that it --
+        a) requires updates each year,
+        b) to work correctly would require filing status information for the past 6 years.
+          
+    -------------------------------------------------------------------------------------- -->
+  <body>
+    <header>
+      <div class="container container-header">
+        <h1>AZ Carryover Assist Tool</h1> 
+      <div>
+        <p><span class="no-print">Help: <input type="image" class="modal-button" src="image/qm.png" alt="" /></span>
+        <span class="client">Client's name:
+          <input class="client-name" type="text" placeholder="Jane Doe" /></span>
+        </p>
+      </div>
+    </header>
+
+    <section>
+      <!-- 
+        The container will have table for Form 301, Previous Years Carryover, 
+        and computed Current Year Carryover.
+       -->
+      <div class="container container-grid">
+
+        <!-- Current Year Information -->
+        <div id="current-year-info">
+          <div class="current-year-header">
+            <p class="p-2">
+                Available Carryover For Current Year -
+              <input id="current-year" type="text" />
+            </p>
+          </div>
+
+          <!-- Table for Form 310 -->
+          <!-- Prevent this table from being viewed -->
+          <!-- <p class="p-2 form-view-control" id="form-309">
+            <input type="checkbox">View Form 309 (Available Carryover) -->
+          </p>
+          <table id="current-table-309" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 309 (Available Carryover)</th>
+              </tr>  
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 310 -->
+          <p class="p-2 form-view-control" id="form-310">
+            <input type="checkbox">View Form 310 (Available Carryover)
+          </p>
+          <table id="current-table-310" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 310 (Available Carryover)</th>
+              </tr>  
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 321 -->
+          <p class="p-2 form-view-control" id="form-321">
+            <input type="checkbox" checked >View Form 321 (Available Carryover)
+          </p>
+          <table id="current-table-321" class="hide visible">
+            <thead>
+              <tr>
+                <th colspan="3">Form 321 (Available Carryover)</th>
+              </tr>
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 322 -->
+          <p class="p-2 form-view-control" id="form-322"><input type="checkbox">View Form 322 (Available Carryover)
+          </p>
+          <table id="current-table-322" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 322 (Available Carryover)</th>
+              </tr>
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 323 -->
+          <p class="p-2 form-view-control" id="form-323"><input type="checkbox">View Form 323 (Available Carryover)
+          </p>
+          <table id="current-table-323" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 323 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 340 -->
+          <!-- Prevent this table from being viewed -->
+          <!-- <p class="p-2 form-view-control" id="form-340"><input type="checkbox">View Form 340 (Available Carryover)
+          </p> -->
+          <table id="current-table-340" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 340 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 348 -->
+          <p class="p-2 form-view-control" id="form-348"><input type="checkbox">View Form 348 (Available Carryover)
+          </p>
+          <table id="current-table-348" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 348 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 352 -->
+          <p class="p-2 form-view-control" id="form-352"><input type="checkbox">View Form 352 (Available Carryover)
+          </p>
+          <table id="current-table-352" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 352 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Previous Year Information -->
+        <div id="previous-year-info">
+          <div class="previous-year-header">
+            <p class="p-2">Available Carryover For Previous Year - <span id="previous-year">2017</span></p>
+          </div>
+
+          <!-- Table for Form 309 -->
+          <!-- Prevent this table from being viewed -->
+          <!-- <p class="p-2 form-view-control" id="form-309"><input type="checkbox">View Form 309 (Available Carryover)
+          </p> -->
+          <table id="previous-table-309" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 309 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 310 -->
+          <p class="p-2 form-view-control" id="form-310"><input type="checkbox">View Form 310 (Available Carryover)
+          </p>
+          <table id="previous-table-310" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 310 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 321 -->
+          <p class="p-2 form-view-control" id="form-321"><input type="checkbox" checked>View Form 321 (Available Carryover)
+          </p>
+          <table id="previous-table-321" class="hide visible">
+            <thead>
+              <tr>
+                <th colspan="3">Form 321 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 322 -->
+          <p class="p-2 form-view-control" id="form-322"><input type="checkbox">View Form 322 (Available Carryover)
+          </p>
+          <table id="previous-table-322" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 322 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 323 -->
+          <p class="p-2 form-view-control" id="form-323"><input type="checkbox">View Form 323 (Available Carryover)
+          </p>
+          <table id="previous-table-323" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 323 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 340 -->
+          <!-- Prevent this table from being viewed -->
+          <!-- <p class="p-2 form-view-control" id="form-340"><input type="checkbox">View Form 340 (Available Carryover)
+          </p> -->
+          <table id="previous-table-340" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 340 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 348 -->
+          <p class="p-2 form-view-control" id="form-348"><input type="checkbox">View Form 348 (Available Carryover)
+          </p>
+          <table id="previous-table-348" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 348 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table for Form 352 -->
+          <p class="p-2 form-view-control" id="form-352"><input type="checkbox">View Form 352 (Available Carryover)
+          </p>
+          <table id="previous-table-352" class="hide">
+            <thead>
+              <tr>
+                <th colspan="3">Form 352 (Available Carryover)</th>
+              </tr>    
+              <tr>
+                <th>Previous Years</th>
+                <th>Original Credit Amount</th>
+                <th>Amount Previously Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">2013</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2014</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2015</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2016</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+              <tr>
+                <th scope="row">2017</th>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Previous Year Form 301 Information -->
+        <div id="previous-year-form-301-info">
+          <div class="previous-year-form-301-header">
+            <p class="p-2">
+              Form 301 For Previous Year -
+              <span id="previous-year-301">2017</span>
+            </p>
+          </div>
+
+          <!-- Form 301 Tax Liability -->
+          <div class="form-301-taxes">
+            <p class="p-2">
+              Tax Liability for Tax Credits (Line 
+              <span id="line-39">39</span>)
+              <input id="tax-liability" type="text" />
+            </p>
+          </div>
+          <!-- Previous Year contributions -->
+          <table id="previous-form-301">
+            <thead>
+              <tr>
+                <th>Credit Description</th>
+                <th>Form #</th>
+                <th>Current Year Credit<br />lines<br />
+                  <span id="line-6a">6</span>  thru 
+                  <span id="line-28a">28</span></th>
+                <th>Available<br />Carryover<br />lines<br /> 
+                  <span id="line-6b">6</span> thru 
+                  <span id="line-28b">28</span></th>
+                <th>Recaptured<br />Credits<br />lines<br />
+                  <span id="line-44">44</span> thru 
+                  <span id="line-67">67</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Taxes Paid to<br />Another State</th>
+                <th scope="row">309</th>
+                <td><input id="previous-contribution-309" type="text" /></td>
+                <td id="previous-carryover-309"><b>Carryover Not <br />Allowed</b></td>
+                <td id="previous-recaptured-309"></td>
+              </tr>
+              <tr>
+                <th scope="row">Solar Energy <br />Devices</th>
+                <th scope="row">310</th>
+                <td><input id="previous-contribution-310" type="text" /></td>
+                <td id="previous-carryover-310"></td>
+                <td id="previous-recaptured-310"></td>
+              </tr>
+              <tr>
+                <th scope="row">Contributions to<br />Qualifying Charitable Organizations</th>
+                <th scope="row">321</th>
+                <td><input id="previous-contribution-321" type="text" /></td>
+                <td id="previous-carryover-321"></td>
+                <td id="previous-recaptured-321"></td>
+              </tr>
+              <tr>
+                <th scope="row">Contributions Made<br />or Fees Paid to Public Schools</th>
+                <th scope="row">322</th>
+                <td><input id="previous-contribution-322" type="text" /></td>
+                <td id="previous-carryover-322"></td>
+                <td id="previous-recaptured-322"></td>
+              </tr>
+              <tr>
+                <th scope="row">Contributions to<br />Private School Tuition Organizations</th>
+                <th scope="row">323</th>
+                <td><input id="previous-contribution-323" type="text" /></td>
+                <td id="previous-carryover-323"></td>
+                <td id="previous-recaptured-323"></td>
+              </tr>
+              <tr>
+                <th scope="row">Contributions to<br />Military Family Relief Fund</th>
+                <th scope="row">340</th>
+                <td><input id="previous-contribution-340" type="text" /></td>
+                <td id="previous-carryover-340"><b>Carryover Not <br />Allowed</b></td>
+                <td id="previous-recaptured-340"></td>
+              </tr>
+              <tr>
+                <th scope="row">Contributions to<br />Certified School Tuition Organization</th>
+                <th scope="row">348</th>
+                <td><input id="previous-contribution-348" type="text" /></td>
+                <td id="previous-carryover-348"></td>
+                <td id="previous-recaptured-348"></td>
+              </tr>
+              <tr>
+                <th scope="row">
+                  Contributions to<br />Qualifying Foster Care Charitable Organizations
+                </th>
+                <th scope="row">352</th>
+                <td><input id="previous-contribution-352" type="text" /></td>
+                <td id="previous-carryover-352"></td>
+                <td id="previous-recaptured-352"></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table id="summary">
+            <thead>
+              <tr>
+                <th>Credits Available/Used credit-summary</th>
+                <th></th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>Total available nonrefundable tax credits</th>
+                <th>Line <span id="line-30">30</span></th>
+                <td></td>
+              </tr>
+              <tr>
+                <th>Total Tax Credits Used</th>
+                <th>Line <span id="line-69">69</span></th>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <button type="button" class="no-print calculate">Calculate Carryover</button>
+          <button type="button" class="no-print clear-all">Clear All</button>
+          <button type="button" id="print-tables" class="no-print" onclick="window.print()"
+            style="visibility:hidden">Print Results</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="training-aides">
+        <button class="no-print training-aides-button" type="submit">Display/Hide Training Data</button>
+
+        <div class="training-tables hide">
+          <h1 class="training-title">Remaining Tax Liability & Recaptured Credits (Training Aides)</h1>
+          <div class="training">
+            <div class="remaining-tax">
+              <h2>Remaining Tax Liability</h2>
+              <table id="remaining-tax-table">
+                <thead>
+                  <tr>
+                    <th>Form Type</th>
+                    <th>Year - 5</th>
+                    <th>Year - 4</th>
+                    <th>Year - 3</th>
+                    <th>Year - 2</th>
+                    <th>Year - 1</th>
+                    <th>Year - 0</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Information for form 309 -->
+                  <tr>
+                    <th>Form 309</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 310 -->
+                  <tr>
+                    <th>Form 310</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 321 -->
+                  <tr>
+                    <th>Form 321</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 322 -->
+                  <tr>
+                    <th>Form 322</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 323 -->
+                  <tr>
+                    <th>Form 323</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 340 -->
+                  <tr>
+                    <th>Form 340</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 348 -->
+                  <tr>
+                    <th>Form 348</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 352 -->
+                  <tr>
+                    <th>Form 352</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="recaptured-credits">
+              <h2>Recaptured Credits</h2>
+              <table id="recaptured-credits-table">
+                <thead>
+                  <tr>
+                    <th>Form Type</th>
+                    <th>Year - 5</th>
+                    <th>Year - 4</th>
+                    <th>Year - 3</th>
+                    <th>Year - 2</th>
+                    <th>Year - 1</th>
+                    <th>Year - 0</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Information for form 309 -->
+                  <tr>
+                    <th>Form 309</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 310 -->
+                  <tr>
+                    <th>Form 310</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 321 -->
+                  <tr>
+                    <th>Form 321</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 322 -->
+                  <tr>
+                    <th>Form 322</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 323 -->
+                  <tr>
+                    <th>Form 323</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 340 -->
+                  <tr>
+                    <th>Form 340</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 348 -->
+                  <tr>
+                    <th>Form 348</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <!-- Information for form 352 -->
+                  <tr>
+                    <th>Form 352</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>  
+      </div>
+  </section>
+
+    <!-- Modal section -->
+    <section>
+      <!-- The Modal -->
+      <div id="myModal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+          <div class="modal-header">
+            <span class="close">&times;</span>
+            <h1>Arizona Carryover Assist Tool</h1>
+          </div>
+          <div class="modal-body">
+            <p>
+              The <strong>Arizona Carryover Assist Tool</strong> aides populating the
+              <em>Available Credit Carryover</em> tables in Forms 310, 321, 322, 323, 348, and 352 for
+              the current year. </p>
+              <p>The are three sections to the tool -- <u>Form 301 For Previous Year</u>, <u>Carryover For Previous Year</u>, and <u>Available Carryover For Current Year</u>. <br>
+              To view the <u>Available Carryover</u> table for a Form 310 through 352, select the respective <em>checkbox</em>. <br>
+              The user will gather the previous year information from <em>Form 301</em> and <em>Available Credit Carryover</em> tables in Forms 310, 321, 322, 323, 348, and 352 and store it into the <u>Form 301 For Previous Year</u> and <u>Available Carryover For Previous Year</u> sections.
+            </p>
+            <h2>Instructions</h2>            
+            <ol>
+              <li>
+                If the previous year Arizona return isn't available, the nonrefundable credit
+                carryover cannot be determined.
+              </li>
+              <li>
+                If there is no Form 301 in the previous year Arizona return, there isn't any
+                nonrefundable credit carryover.
+              </li>
+              <li>
+                In the previous year Form 301, compare line 30 (Total available nonrefundable tax credits) with line
+                76 (Total Tax Credits Used). <br />
+                If line 30 is less than line 76, there is no nonrefundable carryover. <br />
+                Otherwise, proceed to the next step.
+              </li>
+              <li>
+                Assure the "Available Carryover for Current Year" is correct.
+              </li>
+              <li>In the following steps, information will be gathered from the previous year Arizona tax return and stored in the appropriate field of the tool.   
+                <ol>         
+                  <li>From Form 301 in the previous year return, copy the values in lines 6 through 31, <em>Current Year Credit</em> (column "a") and store in the 
+                 <u>Form 301 For Previous Year</u> section entries for Form 309 through 352 fields, respectively.
+                  </li>
+                  <li>From Form 301 in the previous year return, copy the value in line 39 and store in the <u>Form 301 For Previous Year</u> section entry for the <em>Tab Liability for Tax Credits</em>.
+                  </li>
+                  <li>For each Form 310 through 352 that exists in the previous year return: <br>
+                    From Available Credit Carryover--
+                    <ol>   
+                      <li>Click <em>checkbox</em> to view of slected Form (Available Carryover) table</li>     
+                      <li>Copy the values in the <em>Original Credit Amount</em> (column "b") and store in the    <u>Available Carryover For Previous Year</u> section entries for <em>Original Credit Amount</em>.
+                      </li>
+                      <li>Copy the values in the <em>Amount Previously Used</em> (column "c") and store in the <u>Available Carryover For Previous Year</u> section entries for <em>Amount Previously Used</em>.
+                    </li>
+                    </ol>        
+                  </li>
+                  </li>
+                </ol>  
+              <li>When complete, click the <strong>Calculate Carryover</strong> button. <br>If there is any carryover, the forms (310 through 352) with carryover will be displayed.
+              </li>
+              <li>
+                The results are in <u>Available Carryover For Current Year</u>. Copy this information to the appropriate Forms 310 through 352 for the Current Tax in TaxSlayer.
+              </li>
+            </ol>
+            <h2>Training Aides</h2>
+            <p>An additional section can be viewed by clicking the <em>Display/Hide Training Data</em> button. There are two tables that show the effect of applying <q>Available Credits</q> to a <q>Tax Liability</q> elligible for credits. All entries are relative to the previous tax year.</p>
+            <dl>
+              <dt>Remaining Tax Liability</dt>
+              <dd>This shows the reamining tax after credit for a <u>specific form and year</u> was applied.</dd>
+              <dt>Recaptured Credits</dt>
+              <dd>This shows the amount of recaptured credit used for a <u>specific form and year</u>.</dd>
+            </dl>
+          </div>
+          <div class="modal-footer">
+              <p>Author: Joe Ohrazda <span class="tab">email: johrazda@aol.com</span></p>
+              <p class="version-control">Version: 1.3.0<span class="tab version-date">Release Date: December 23, 2019</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="js/main.js"></script>
+    <script src="js/validate.js"></script>
+    <script src="js/modal.js"></script>
+  </body>
+</html>
