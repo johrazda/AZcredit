@@ -12,7 +12,7 @@
   /* Full width */
   height: 100%;
   /* Full height */
-  overflow: auto;
+  overflow: visible !important;
   /* Enable scroll if needed */
   background-color: black;
   /* Fallback color */
